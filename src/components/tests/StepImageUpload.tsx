@@ -154,7 +154,7 @@ export default function StepImageUpload({ onComplete }: Props) {
           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
         >⊕</motion.div>
         <h2 className="text-3xl font-display font-bold bg-gradient-to-r from-teal-400 via-cyan-300 to-sky-400 bg-clip-text text-transparent mb-1">
-          Biometric Imprint
+          Optional Personal Images
         </h2>
         <p className="text-white/40 text-xs font-tech uppercase tracking-widest">
           Optional · Your soul print is complete without this
@@ -163,7 +163,7 @@ export default function StepImageUpload({ onComplete }: Props) {
 
       <GlassCard className="mb-4">
         <p className="text-white/60 text-sm font-light leading-relaxed text-center mb-6">
-          For those who wish to go deeper — upload a palm image for line analysis and a face image for energetic resonance mapping. These remain entirely local to your session.
+          Optional images stay in your local session and are not analyzed for personality, character, or mental health. Your report works without uploading anything. Avoid uploading sensitive images on shared devices.
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -238,7 +238,7 @@ export default function StepImageUpload({ onComplete }: Props) {
                   onClick={handleSubmit}
                   className="w-full"
                 >
-                  Seal My Biometric Imprint →
+                  Seal My Optional Personal Images →
                 </CosmicButton>
               </motion.div>
             )}

@@ -258,7 +258,7 @@ export default function LandingPage({ onBegin, onResume, onArchives, hasExisting
           </p>
         </motion.div>
 
-        {/* CTA Buttons */}
+        <div className="max-w-xl text-sm leading-relaxed text-white/70"><p>Inspired by a personal search for understanding: psychology, philosophy, and optional spiritual reflection, with room to define yourself beyond a label. Original assessments are for self-reflection and are not clinically validated.</p><a href="/reflection.html" className="inline-block mt-4 underline text-cyan-300">Explore values, relationships &amp; printable growth exercises</a></div>{/* CTA Buttons */}
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4">
           <CosmicButton onClick={onBegin} variant="primary" size="lg">
             ✦ Begin Ritual
@@ -325,7 +325,7 @@ export default function LandingPage({ onBegin, onResume, onArchives, hasExisting
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 2.4 }}
         >
-          Powered by AI Personality Synthesis
+          Private, local reflection — no AI key required
         </motion.p>
       </motion.div>
     </div>
