@@ -1,4 +1,5 @@
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { readSession, readArchive, withoutImages, writeStored } from '../services/sessionStorage';
+import { createContext, useContext, useReducer, useEffect, useState, type ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type {
   SoulPrintSession,
@@ -101,15 +102,8 @@ const ARCHIVE_KEY = 'soulprint_archive';
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, dispatch] = useReducer(sessionReducer, null, () => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return createNewSession();
-      }
-    }
-    return createNewSession();
+    try { return readSession(localStorage, STORAGE_KEY) || createNewSession(); }
+    catch { return createNewSession(); }
   });
 
   const [savedSessions, setSavedSessions] = useReducer(
@@ -119,47 +113,47 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     [],
     () => {
-      const saved = localStorage.getItem(ARCHIVE_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          return [];
-        }
-      }
-      return [];
+      try { return readArchive(localStorage, ARCHIVE_KEY); } catch { return []; }
     }
   );
 
+  const [storageError, setStorageError] = useState(false);
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    try { setStorageError(!writeStored(localStorage, STORAGE_KEY, withoutImages(session))); }
+    catch { setStorageError(true); }
   }, [session]);
 
+  useEffect(() => {
+    try { if (!writeStored(localStorage, ARCHIVE_KEY, savedSessions)) setStorageError(true); }
+    catch { setStorageError(true); }
+  }, [savedSessions]);
+
   const saveCurrentSession = () => {
-    const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
-    const existingIdx = archive.findIndex((s: SoulPrintSession) => s.id === session.id);
-    if (existingIdx >= 0) {
-      archive[existingIdx] = session;
-    } else {
-      archive.push(session);
-    }
-    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive));
+    const archive = savedSessions.filter(s => s.id !== session.id);
+    archive.push(withoutImages(session));
     setSavedSessions({ type: 'SET', payload: archive });
+    try { setStorageError(!writeStored(localStorage, ARCHIVE_KEY, archive)); }
+    catch { setStorageError(true); }
   };
 
   const loadSession = (id: string) => {
-    const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
-    const found = archive.find((s: SoulPrintSession) => s.id === id);
-    if (found) {
-      dispatch({ type: 'LOAD_SESSION', payload: found });
-    }
+    const found = savedSessions.find(s => s.id === id);
+    if (found) dispatch({ type: 'LOAD_SESSION', payload: found });
   };
 
   const deleteSession = (id: string) => {
-    const archive = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
-    const filtered = archive.filter((s: SoulPrintSession) => s.id !== id);
-    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(filtered));
+    const filtered = savedSessions.filter(s => s.id !== id);
     setSavedSessions({ type: 'SET', payload: filtered });
+    try { setStorageError(!writeStored(localStorage, ARCHIVE_KEY, filtered)); }
+    catch { setStorageError(true); }
+  };
+
+  const clearAllData = () => {
+    if (!window.confirm('Delete current and archived Soul Print assessments from this device? Exported copies will remain.')) return;
+    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(ARCHIVE_KEY); setStorageError(false); }
+    catch { setStorageError(true); }
+    setSavedSessions({ type: 'SET', payload: [] });
+    dispatch({ type: 'RESET_SESSION' });
   };
 
   const completionPercentage = Math.round(
@@ -178,6 +172,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         completionPercentage,
       }}
     >
+      <aside className="px-4 py-2 text-sm text-center bg-slate-950 text-slate-200" aria-label="Assessment privacy">
+        Assessments stay in this browser. Optional images are not saved with assessments or sent for analysis.
+        <button type="button" className="ml-3 underline" onClick={clearAllData}>Delete assessment data</button>
+        {storageError && <p role="alert">Browser storage is unavailable or full. Changes remain in memory for this visit; download your report before leaving.</p>}
+      </aside>
       {children}
     </SessionContext.Provider>
   );

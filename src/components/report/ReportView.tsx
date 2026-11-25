@@ -267,6 +267,11 @@ export default function ReportView({
           <CosmicButton onClick={onSave} variant="primary" size="md" disabled={isStreaming}>
             ✦ Save to Archives
           </CosmicButton>
+          <CosmicButton onClick={() => {
+            const url = URL.createObjectURL(new Blob([report], { type: 'text/markdown;charset=utf-8' }));
+            const link = document.createElement('a'); link.href = url; link.download = 'SoulPrint-reflection.md'; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }} variant="secondary" size="md" disabled={isStreaming}>Download report</CosmicButton>
           <CosmicButton
             onClick={() => {
               if (navigator.share) {
