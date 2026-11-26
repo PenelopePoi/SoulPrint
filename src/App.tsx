@@ -85,93 +85,77 @@ function SoulPrintApp() {
       const insight = await generateInsight(testName, data);
       setInsightText(insight);
     } catch {
-      setInsightText('✦ The cosmic frequencies reveal patterns unique to your psyche. Each response adds depth to your emerging blueprint. What other dimensions of self await discovery?');
+      setInsightText(`Your recorded results: ${JSON.stringify(data)}. AI interpretation is unavailable. These are exploratory self-report results, not a diagnosis.`);
     }
   }, []);
 
   const handlePersonalData = useCallback((data: PersonalData) => {
     dispatch({ type: 'SET_PERSONAL_DATA', payload: data });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.PERSONAL_DATA });
-    advanceStep();
-  }, [dispatch, advanceStep]);
+    void showInsightAndAdvance('Astral Coordinates', data as unknown as Record<string, unknown>);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleMBTI = useCallback(async (result: MBTIResult) => {
     dispatch({ type: 'SET_MBTI', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.MINDSET_MATRIX });
     await showInsightAndAdvance('Mindset Matrix (MBTI)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleEnneagram = useCallback(async (result: EnneagramResult) => {
     dispatch({ type: 'SET_ENNEAGRAM', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.INNER_OS });
     await showInsightAndAdvance('Inner Operating System (Enneagram)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleBigFive = useCallback(async (result: BigFiveResult) => {
     dispatch({ type: 'SET_BIG_FIVE', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.ELEMENTAL_BALANCE });
     await showInsightAndAdvance('Elemental Balance (Big Five)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleNeuralResonance = useCallback(async (result: NeuralResonanceResult) => {
     dispatch({ type: 'SET_NEURAL_RESONANCE', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.NEURAL_RESONANCE });
     await showInsightAndAdvance('Neural Resonance (Clinical Scales)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleDISC = useCallback(async (result: DISCResult) => {
     dispatch({ type: 'SET_DISC', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.KINETIC_SIGNATURE });
     await showInsightAndAdvance('Kinetic Signature (DISC)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleVoidGaze = useCallback(async (result: VoidGazeResult) => {
     dispatch({ type: 'SET_VOID_GAZE', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.VOID_GAZE });
     await showInsightAndAdvance('Void Gaze (Projective)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleNarrativeArc = useCallback(async (result: NarrativeArcResult) => {
     dispatch({ type: 'SET_NARRATIVE_ARC', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.NARRATIVE_ARC });
     await showInsightAndAdvance('Narrative Arc (TAT)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleJungian = useCallback(async (result: JungianResult) => {
     dispatch({ type: 'SET_JUNGIAN', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.JUNGIAN_ARCHETYPES });
     await showInsightAndAdvance('Archetype Resonance (Jungian)', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
   const handleShadowWork = useCallback(async (result: ShadowWorkResult) => {
     dispatch({ type: 'SET_SHADOW_WORK', payload: result });
     dispatch({ type: 'COMPLETE_STEP', payload: AppStep.SHADOW_WORK });
     await showInsightAndAdvance('Shadow Integration', result as unknown as Record<string, unknown>);
-    advanceStep();
-  }, [dispatch, advanceStep, showInsightAndAdvance]);
+  }, [dispatch, showInsightAndAdvance]);
 
-  const handleImageUpload = useCallback((data: ImageUploadData) => {
-    dispatch({ type: 'SET_IMAGES', payload: data });
-    dispatch({ type: 'COMPLETE_STEP', payload: AppStep.IMAGE_UPLOAD });
-    navigateTo(AppStep.GENERATING);
-    startGeneration();
-  }, [dispatch, navigateTo]);
-
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (snapshot: typeof session = session) => {
     setIsStreaming(true);
     setStreamPreview('');
     navigateTo(AppStep.GENERATING);
 
     try {
-      const report = await generateReport(session, (chunk) => {
+      const report = await generateReport(snapshot, (chunk) => {
         setStreamPreview(chunk);
       });
       dispatch({ type: 'SET_REPORT', payload: report });
@@ -200,6 +184,13 @@ Your session data is saved. Click "Generate New Report" to retry.
       navigateTo(AppStep.REPORT);
     }
   }, [session, dispatch, navigateTo]);
+
+  const handleImageUpload = useCallback((data: ImageUploadData) => {
+    dispatch({ type: 'SET_IMAGES', payload: data });
+    dispatch({ type: 'COMPLETE_STEP', payload: AppStep.IMAGE_UPLOAD });
+    navigateTo(AppStep.GENERATING);
+    void startGeneration({ ...session, images: data });
+  }, [dispatch, navigateTo, session, startGeneration]);
 
   const handleReset = useCallback(() => {
     dispatch({ type: 'RESET_SESSION' });
@@ -349,7 +340,7 @@ Your session data is saved. Click "Generate New Report" to retry.
       {/* Insight Modal */}
       <InsightModal
         isOpen={showInsight}
-        onClose={() => setShowInsight(false)}
+        onClose={() => { if (!insightText) return; setShowInsight(false); advanceStep(); }}
         insight={insightText}
         testName={insightTestName}
       />
