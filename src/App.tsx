@@ -53,10 +53,11 @@ const STEP_ORDER: AppStep[] = [
 ];
 
 function SoulPrintApp() {
-  const { session, dispatch, completionPercentage, saveCurrentSession } = useSession();
+  const { session, dispatch, completionPercentage, saveCurrentSession, savedSessions, loadSession } = useSession();
   const [currentStep, setCurrentStep] = useState<AppStep>(
     session.report ? AppStep.REPORT : AppStep.LANDING
   );
+  const [showArchives, setShowArchives] = useState(false);
   const [showStarMap, setShowStarMap] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
   const [insightText, setInsightText] = useState('');
@@ -180,7 +181,8 @@ Your session data is saved. Click "Generate New Report" to retry.
 ---
 
 *Error: ${err instanceof Error ? err.message : 'Unknown error'}*`;
-      dispatch({ type: 'SET_REPORT', payload: fallbackReport });
+      if (!snapshot.report) dispatch({ type: 'SET_REPORT', payload: fallbackReport });
+      else window.alert('Regeneration failed. Your previous report and assessment have been preserved.');
       navigateTo(AppStep.REPORT);
     }
   }, [session, dispatch, navigateTo]);
@@ -193,17 +195,19 @@ Your session data is saved. Click "Generate New Report" to retry.
   }, [dispatch, navigateTo, session, startGeneration]);
 
   const handleReset = useCallback(() => {
+    if (!window.confirm('Start a new profile? Save your existing assessment to Archives first.')) return;
+    saveCurrentSession();
     dispatch({ type: 'RESET_SESSION' });
     setStreamPreview('');
     navigateTo(AppStep.LANDING);
-  }, [dispatch, navigateTo]);
+  }, [dispatch, navigateTo, saveCurrentSession]);
 
   const handleSave = useCallback(() => {
     saveCurrentSession();
   }, [saveCurrentSession]);
 
-  const exportAssessment = () => {
-    const { images: _images, ...current } = session;
+  const exportAssessment = (source: typeof session = session) => {
+    const { images: _images, ...current } = source;
     void _images;
     const blob = new Blob([JSON.stringify(current, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -271,7 +275,7 @@ Your session data is saved. Click "Generate New Report" to retry.
                       navigateTo(AppStep.PERSONAL_DATA);
                     }
                   }}
-                  onArchives={() => {}}
+                  onArchives={() => setShowArchives(true)}
                   hasExistingSession={session.completedSteps.length > 0}
                 />
               )}
@@ -328,7 +332,7 @@ Your session data is saved. Click "Generate New Report" to retry.
               )}
 
               {currentStep === AppStep.REPORT && session.report && (
-                <div className="flex flex-wrap gap-3 justify-center my-4"><button className="glass rounded-lg p-3" onClick={exportAssessment}>Download assessment data</button><button className="glass rounded-lg p-3" onClick={() => void startGeneration()}>Regenerate analysis without retesting</button></div>
+                <div className="flex flex-wrap gap-3 justify-center my-4"><button className="glass rounded-lg p-3" onClick={() => exportAssessment()}>Download assessment data</button><button className="glass rounded-lg p-3" onClick={() => void startGeneration()}>Regenerate analysis without retesting</button></div>
               )}
               {currentStep === AppStep.REPORT && session.report && (
                 <ReportView
@@ -344,11 +348,21 @@ Your session data is saved. Click "Generate New Report" to retry.
         </div>
       </main>
 
+      {showArchives && <div className="fixed inset-0 z-[100] bg-black/90 p-5 overflow-auto text-white">
+        <button onClick={() => setShowArchives(false)}>Close archives</button>
+        <h2 className="text-xl my-4">Saved profiles</h2>
+        {savedSessions.length === 0 && <p>No archived profiles found on this browser.</p>}
+        {savedSessions.map(saved => <div key={saved.id} className="glass p-4 my-3">
+          <p>{saved.personalData?.name || 'Unnamed profile'}</p>
+          <button className="p-3" onClick={() => { loadSession(saved.id); setShowArchives(false); navigateTo(saved.report ? AppStep.REPORT : AppStep.LANDING); }}>Open profile</button>
+          <button className="p-3" onClick={() => exportAssessment(saved)}>Export assessment</button>
+        </div>)}
+      </div>}
       {/* Star Map Modal */}
       <StarMap
         isOpen={showStarMap}
         onClose={() => setShowStarMap(false)}
-        onNavigate={navigateTo}
+        onNavigate={(step) => { if (session.completedSteps.includes(step) && session.report) { navigateTo(AppStep.REPORT); } else { navigateTo(step); } }}
         currentStep={currentStep}
       />
 
