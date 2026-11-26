@@ -1,0 +1,13 @@
+# SoulPrint unified requirements
+
+Priority zero: recover existing profiles without retesting; restore last working baseline; never reset or overwrite archived results during regeneration. Stable origin, explicit JSON export/import, versioned session schema, mobile QA.
+
+Benchmarks: Co–Star, The Pattern, AstroMatrix, Always Astrology, Nebula, Human Design, numerology, Kabbalah, Tree of Life, Runez/runes, tarot, palmistry, 40+ Psychological Tests, MBTI, Enneagram, Typology, Dimensional, Big Five. Benchmark public capabilities before implementation; use original or licensed content.
+
+Astrology: verified ephemeris, timezone and birth location, natal/draconic charts, houses, aspects, transits, synastry, composite, progressions, nodes, Chiron, Lilith; unknown birth time must suppress unreliable houses/angles. Human Design: verified calculations, bodygraph, type, authority, strategy, profile, centers, gates, channels. Numerology: transparent calculations, life path, expression, soul urge, personality, cycles, master numbers. Kabbalah: contextualized Tree of Life, ten sefirot, paths and reflective practices. Tarot/runes: interactive draws, spreads, meanings, journals. Palmistry: optional traditional symbolic education and user-guided line mapping, no factual personality inference from appearance.
+
+Psychology: MBTI preferences and cognitive functions, Enneagram types/wings/instincts, Big Five facets, DISC, Jungian reflection, values, attachment, emotional regulation, cognitive exercises, career interests and multidimensional trait profiles. Distinguish validated instruments from original exploratory quizzes; no clinical diagnosis or unvalidated IQ claims.
+
+Each module: persisted answers, deterministic scores where applicable, immediately visible personalized summary, evidence, limitations, strengths, tradeoffs, exercises, review and export. Final profile: comprehensive synthesis of every completed module, contradictions, uncertainty, practical 7/30/90 day plan, navigable report, downloadable PDF and data backup. Spiritual systems explicitly symbolic and separate from psychological evidence. No invented scores or placements. Local fallback must show actual recorded findings, never generic worksheet masquerading as completed analysis.
+
+Release gates: restore prior functionality, test every question and scoring fixture, mobile layouts, archive restore, export/import round trip, unknown birth time, offline and AI failure, report completeness, PDF, privacy, and end-to-end deployed customer journey. Do not claim release until tested. Existing mother's profile recovery remains outstanding.
