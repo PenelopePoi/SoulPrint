@@ -101,6 +101,7 @@ export default function ReportView({
 
   return (
     <div className="relative min-h-screen" ref={reportRef}>
+      <style>{`@media print { @page { margin: 16mm; } body, .soul-report { background: white !important; color: black !important; } header, aside, button, canvas { display: none !important; } .soul-report * { color: black !important; opacity: 1 !important; } .glass { background: white !important; box-shadow: none !important; } h2,h3 { break-after: avoid; } }`}</style>
       {/* ── Cosmic header ── */}
       <motion.div
         className="relative py-16 px-6 text-center overflow-hidden"
@@ -264,13 +265,22 @@ export default function ReportView({
         transition={{ duration: 0.6, delay: 1.0 }}
       >
         <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center gap-3">
+          <CosmicButton onClick={() => {
+            const url = URL.createObjectURL(new Blob([report], { type: 'text/markdown;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = subjectName.replace(/[^a-zA-Z0-9_-]/g, '_') + '-SoulPrint.md';
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }} variant="secondary" size="md" disabled={isStreaming}>Download full report</CosmicButton>
+          <CosmicButton onClick={() => window.print()} variant="secondary" size="md" disabled={isStreaming}>Print / Save PDF</CosmicButton>
           <CosmicButton onClick={onSave} variant="primary" size="md" disabled={isStreaming}>
             ✦ Save to Archives
           </CosmicButton>
           <CosmicButton
             onClick={() => {
               if (navigator.share) {
-                navigator.share({ title: `${subjectName} — SoulPrint`, text: report.slice(0, 300) });
+                navigator.share({ title: `${subjectName} — SoulPrint`, text: report });
               }
             }}
             variant="secondary"
@@ -279,7 +289,7 @@ export default function ReportView({
             ◌ Share
           </CosmicButton>
           <CosmicButton onClick={onReset} variant="ghost" size="md">
-            ◈ Generate New Report
+            ◈ Start New Profile
           </CosmicButton>
         </div>
       </motion.div>
