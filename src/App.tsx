@@ -202,6 +202,18 @@ Your session data is saved. Click "Generate New Report" to retry.
     saveCurrentSession();
   }, [saveCurrentSession]);
 
+  const exportAssessment = () => {
+    const { images: _images, ...current } = session;
+    void _images;
+    const blob = new Blob([JSON.stringify(current, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'SoulPrint-assessment.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const isNotLanding = currentStep !== AppStep.LANDING;
 
   return (
@@ -315,6 +327,9 @@ Your session data is saved. Click "Generate New Report" to retry.
                 />
               )}
 
+              {currentStep === AppStep.REPORT && session.report && (
+                <div className="flex flex-wrap gap-3 justify-center my-4"><button className="glass rounded-lg p-3" onClick={exportAssessment}>Download assessment data</button><button className="glass rounded-lg p-3" onClick={() => void startGeneration()}>Regenerate analysis without retesting</button></div>
+              )}
               {currentStep === AppStep.REPORT && session.report && (
                 <ReportView
                   report={session.report}
